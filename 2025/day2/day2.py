@@ -60,7 +60,6 @@ def gen_repeated_up_to(max):
     for k in range(1, (max_digits // 2) + 1):
         start = 10**(k-1)
         end = 10**k
-        print(k)
         # generate the numbers: for each number of digits k we go from 1**(k-1) to 10**k - 1
         # then, we smush them together to get a repeated thing A going on.
         #
@@ -71,7 +70,6 @@ def gen_repeated_up_to(max):
         #         1-9          10-99          100-999
         # finally, we smash them together.
         for a in range(start, end):
-            print(a)
             rep = int(str(a) + str(a))
             if rep > max:
                 # stop with the exceed the total max
