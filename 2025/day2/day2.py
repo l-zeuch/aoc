@@ -4,10 +4,11 @@ import bisect
 def part1_regex(lines):
     """First iteration. Naive approach. Works, but runs >1s."""
     seen = set()
+    t = re.compile(r'^(\d+)\1')
     for line in lines:
         nums = [int(num) for num in line.split('-')]
         for n in range(nums[0], nums[1]):
-            if re.match(r'^(\d+)\1', str(n)):
+            if t.match(str(n)):
                 seen.add(n)
     return sum(seen)
 
@@ -84,10 +85,11 @@ def part2(lines):
     I do not particulary care for optimising this, Copilot suggested KMP.
     """
     seen = set()
+    t = re.compile(r'^(\d+)\1+$')
     for line in lines:
         nums = [int(num) for num in line.split('-')]
         for n in range(nums[0], nums[1]):
-            if bool(re.match(r'^(\d+)\1+$', str(n))):
+            if bool(t.match(str(n))):
                 seen.add(n)
     return sum(seen)
 
