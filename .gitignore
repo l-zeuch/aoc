@@ -1,1 +1,5 @@
 **/*/input.txt
+
+# Python cache files, literally everywhere.
+__pycache__/
+**/*/__pycache__/
