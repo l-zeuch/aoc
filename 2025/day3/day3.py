@@ -1,3 +1,10 @@
+import sys
+import os
+# HACK: I don't want to copy my benchmarking tools into every solution directory,
+#       so let's just modify the path at runtime and import from there.
+sys.path.insert(1, os.path.join(sys.path[0], '..', '..'))
+from bench import *
+
 def part1(lines):
     total_jolts = 0
     for line in lines:
@@ -57,13 +64,82 @@ def part2(lines):
 
     return total_jolts
 
+def part2_alternate(lines):
+    total_jolts = 0
+
+    for bank in lines:
+        search_bank = [int(x) for x in bank]
+        results = []
+
+        for i in range(12):
+            if len(search_bank) == 0:
+                results.append(0)
+                continue
+
+            largest = -1
+            index_of_largest = 0
+            need = 12-i # we take one battery from each iteration
+            can_take = len(search_bank) - need
+
+            # construct a search window that ranges from the start (or the previously found max)
+            # to however many we can still take: [max, can_take]
+            # this means we're not prematurely exhausting our bank.
+            # the search window is not always set to how many we still need!
+
+            # potential optimization: skip search if we already have the max digit
+            # benchmarks show this is not significantly faster, but let's keep it for posterity
+            if largest != 9:
+                for idx, v in enumerate(search_bank[:can_take+1]):
+                    if v > largest:
+                        largest = v
+                        index_of_largest = idx
+            results.append(largest)
+            # slice it up: we want to start at the found max number in the next iteration
+            search_bank = search_bank[(index_of_largest + 1):]
+
+        tmp = 0
+        for d in results:
+            tmp = tmp * 10 + d
+        total_jolts += tmp
+
+    return total_jolts
+
 def main():
     with open("input.txt", "rt") as fin:
         lines = [line.strip() for line in fin]
     lines_lst = list(lines) # create an immutable reference
+
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Day 3: Battery Joltages"
+    )
+    parser.add_argument(
+        "--bench",
+        help="run benchmark on part 2 implementations",
+        action="store_true",
+    )
+    args = parser.parse_args()
+
+    if not args.bench and not args.solve:
+        print("Please specify --bench or --solve")
+        return
+
+    if args.bench:
+        print("Benchmarking part 2 implementations...")
+        r1 = bench_func(part2, lines_lst, repeat=20)
+        r2 = bench_func(part2_alternate, lines_lst, repeat=20)
+
+        print_stats(r1)
+        print()
+        print_stats(r2)
+        print()
+        print_comparison(r1, r2)
+        return
+
     sol1 = part1(lines_lst)
     sol2 = part2(lines_lst)
     print(f"part 1: {sol1}; part 2: {sol2}")
+    return
 
 if __name__ == "__main__":
     main()
