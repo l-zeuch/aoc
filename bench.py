@@ -1,8 +1,10 @@
+import functools
+import inspect
 import math
 import statistics
 import timeit
 
-from typing import Any, Dict, Iterable
+from typing import Any, Dict
 
 def bench_func(func, arg, repeat=10):
     # create a callable wrapper for timeit
@@ -17,8 +19,13 @@ def bench_func(func, arg, repeat=10):
     minimum = min(per_iter)
     maximum = max(per_iter)
 
+    underlying = _unwrap_callable(func)
+    func_name = getattr(underlying, "__name__", None)
+    if not func_name:
+        func_name = repr(underlying)
+
     return {
-        "func": getattr(func, "__name__", str(func)),
+        "func": func_name,
         "number": number,
         "repeat": repeat,
         "mean": mean,
@@ -36,6 +43,63 @@ def print_stats(r: Dict[str, Any]) -> None:
     print(f"  std_dev (s)           : {r['std_dev']:.9f}")
     print(f"  min (s)               : {r['min']:.9f}")
     print(f"  max (s)               : {r['max']:.9f}")
+
+# --- helpers ---
+def _unwrap_callable(obj):
+    if isinstance(obj, functools.partial):
+        return obj.func
+    try:
+        un = inspect.unwrap(obj)
+        if un is not obj:
+            return un
+    except Exception:
+        passA
+
+    try:
+        name = getattr(obj, "__name__", None)
+        if callable(obj) and name and not name.startswith("<"):
+            return obj
+    except Exception:
+        pass
+
+    # if it's a lambda or wrapper with closure, try to find a callable inside closure cells
+    try:
+        name = getattr(obj, "__name__", None)
+        if name == "<lambda>" or (callable(obj) and name and name.startswith("<")):
+            closure = getattr(obj, "__closure__", None)
+            if closure:
+                for cell in closure:
+                    try:
+                        val = cell.cell_contents
+                        if callable(val):
+                            # prefer named functions (not lambdas)
+                            vname = getattr(val, "__name__", "")
+                            if vname and vname != "<lambda>":
+                                return val
+                    except Exception:
+                        continue
+    except Exception:
+        pass
+
+    # code-object scan: check names referenced by the function and look them up in globals
+    try:
+        code = getattr(obj, "__code__", None)
+        gdict = getattr(obj, "__globals__", None)
+        if code is not None and gdict:
+            # co_names lists global names referenced by the code object
+            for nm in getattr(code, "co_names", ()):
+                try:
+                    val = gdict.get(nm, None)
+                    if callable(val):
+                        vname = getattr(val, "__name__", "")
+                        if vname and vname != "<lambda>":
+                            return val
+                except Exception:
+                    continue
+    except Exception:
+        pass
+
+    return obj
 
 # --- statistical comparison considering standard deviations ---
 def _cohens_d(mean1, mean2, s1, s2, n1, n2) -> float:
