@@ -118,6 +118,12 @@ def main():
         help="Run benchmarks",
         action="store_true",
     )
+    parser.add_argument(
+        "--part",
+        help="Select the part to run",
+        type=int,
+        choices=[1, 2],
+    )
     args = parser.parse_args()
 
     path = 'input.txt'
@@ -130,30 +136,58 @@ def main():
     grid = [[c for c in line] for line in lines]
 
     if args.bench:
-        print("Benchmarking...")
+        print(f'Benchmarking solutions {args.part if args.part else "1 and 2"} (copy vs in-place)...\n')
         # avoid the benchmarking runs mutate grid in-place: provide a fresh copy each run.
-        p1_copy = bench_func(part1_copy, grid, repeat=20)
-        p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
-        p2_copy = bench_func(part2_copy, grid, repeat=20)
-        p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20)
-        
-        print_stats(p1_copy)
-        print()
-        print_stats(p1_inplace)
-        print()
-        print_comparison(p1_copy, p1_inplace)
-        print_stats(p2_copy)
-        print()
-        print_stats(p2_inplace)
-        print()
-        print_comparison(p2_copy, p2_inplace)
+        if args.part == 1:
+            p1_copy = bench_func(part1_copy, grid, repeat=20)
+            p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
+            print_stats(p1_copy)
+            print()
+            print_stats(p1_inplace)
+            print()
+            print_comparison(p1_copy, p1_inplace)
+        elif args.part == 2:
+            p2_copy = bench_func(part2_copy, grid, repeat=20)
+            p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
+            print_stats(p2_copy)
+            print()
+            print_stats(p2_inplace)
+            print()
+            print_comparison(p2_copy, p2_inplace)
+        else: # run everything
+            p1_copy = bench_func(part1_copy, grid, repeat=20)
+            p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
+            p2_copy = bench_func(part2_copy, grid, repeat=20)
+            p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
+
+            print_stats(p1_copy)
+            print()
+            print_stats(p1_inplace)
+            print()
+            print_comparison(p1_copy, p1_inplace)
+            print()
+            print_stats(p2_copy)
+            print()
+            print_stats(p2_inplace)
+            print()
+            print_comparison(p2_copy, p2_inplace)
         return
 
-    sol1, _ = part1_inplace(grid)
-    # part1 mutates in-place; start with a fresh copy for part2.
-    grid2 = [[c for c in line] for line in lines]
-    sol2 = part2_inplace(grid2)
-    print(f'solution 1: {sol1}, solution 2: {sol2}')
+    if args.part == 1:
+        sol, _ = part1_inplace(grid)
+        print(f'solution 1: {sol}')
+        return
+    elif args.part == 2:
+        sol2 = part2_inplace(grid)
+        print(f'solution 2: {sol2}')
+        return
+    else: # everything
+        sol, _ = part1_inplace(grid)
+        print(f'solution 1: {sol}')
+        # part1 mutates in-place; start with a fresh copy for part2.
+        grid2 = [[c for c in line] for line in lines]
+        sol2 = part2_inplace(grid2)
+        print(f'solution 2: {sol2}')
 
 if __name__ == "__main__":
     main()
