@@ -53,7 +53,7 @@ def _unwrap_callable(obj):
         if un is not obj:
             return un
     except Exception:
-        passA
+        pass
 
     try:
         name = getattr(obj, "__name__", None)
