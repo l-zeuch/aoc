@@ -7,11 +7,15 @@ from bench import *
 
 import argparse
 import copy
+from typing import List, Tuple
 
-def part1(grid):
-#    print("=== BEFORE ===")
-#    for row in grid:
-#        print("".join(row))
+# top, top right, right, bottom right, bottom, bottom left, left, top left
+DIRECTIONS = [(-1, 0), (-1, 1), (0, 1), (1,1), (1, 0), (1,-1), (0, -1), (-1,-1)]
+
+def part1_copy(grid):
+    #    print("=== BEFORE ===")
+    #    for row in grid:
+    #        print("".join(row))
 
     rows = len(grid)
     cols = len(grid[0])
@@ -44,11 +48,57 @@ def part1(grid):
 #        print("".join(row))
     return can_take, new_grid
 
-def part2(grid):
+def part2_copy(grid):
     can_take = 0
     current_grid = [row.copy() for row in grid]
     while True:
-        added, current_grid = part1(current_grid)
+        added, current_grid = part1_copy(current_grid)
+        if added == 0:
+            break
+        can_take += added
+    return can_take
+
+#    print("=== AFTER ===")
+#    for row in new_grid:
+#        print("".join(row))
+    return can_take, new_grid
+
+def part1_inplace(grid):
+#    print("=== BEFORE ===")
+#    for row in grid:
+#        print("".join(row))
+
+    rows = len(grid)
+    cols = len(grid[0])
+
+    for r in range(rows):
+        row = grid[r]
+        for c in range(cols):
+            if row[c] == 'x':
+                row[c] = '.'
+
+    # keep track of what we can remove, but don't change whilst we're counting
+    can_take: List[Tuple[int, int]] = []
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] != '@':
+                continue
+            neighbors = 0
+            for dx, dy in DIRECTIONS:
+                nr, nc = r + dx, c + dy
+                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == '@':
+                    neighbors += 1
+            if neighbors < 4:
+                can_take.append((r, c))
+    for (r, c) in can_take:
+        grid[r][c] = 'x'
+
+    return len(can_take), grid
+
+def part2_inplace(grid):
+    can_take = 0
+    while True:
+        added, _ = part1_inplace(grid)
         if added == 0:
             break
         can_take += added
@@ -81,15 +131,28 @@ def main():
 
     if args.bench:
         print("Benchmarking...")
-        r1_1 = bench_func(part1, grid, repeat=20)
-        r2_1 = bench_func(part2, grid, repeat=20)
-        print_stats(r1_1)
+        # avoid the benchmarking runs mutate grid in-place: provide a fresh copy each run.
+        p1_copy = bench_func(part1_copy, grid, repeat=20)
+        p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
+        p2_copy = bench_func(part2_copy, grid, repeat=20)
+        p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20)
+        
+        print_stats(p1_copy)
         print()
-        print_stats(r2_1)
+        print_stats(p1_inplace)
+        print()
+        print_comparison(p1_copy, p1_inplace)
+        print_stats(p2_copy)
+        print()
+        print_stats(p2_inplace)
+        print()
+        print_comparison(p2_copy, p2_inplace)
         return
 
-    sol1, _ = part1(grid)
-    sol2 = part2(grid)
+    sol1, _ = part1_inplace(grid)
+    # part1 mutates in-place; start with a fresh copy for part2.
+    grid2 = [[c for c in line] for line in lines]
+    sol2 = part2_inplace(grid2)
     print(f'solution 1: {sol1}, solution 2: {sol2}')
 
 if __name__ == "__main__":
