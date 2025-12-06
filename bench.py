@@ -36,13 +36,39 @@ def bench_func(func, arg, repeat=10):
     }
 
 def print_stats(r: Dict[str, Any]) -> None:
+    def _choose_unit(sec):
+        if sec is None:
+            sec = 0.0
+        s = abs(sec)
+        units = [
+            ("h", 3600.0),
+            ("m", 60.0),
+            ("s", 1.0),
+            ("ms", 1e-3),
+            ("us", 1e-6),
+            ("ns", 1e-9),
+        ]
+        for name, thresh in units:
+            if s >= thresh:
+                return name, thresh
+        # extremely small: use ns
+        return "ns", 1e-9
+
+
+    mean = r["mean"]
+    unit, factor = _choose_unit(mean)
+    def fmt(val):
+        return f"{(val / factor):.9f}"
+
+    
     print(f"{r['func']}:")
     print(f"  loops per measurement : {r['number']}")
     print(f"  measurements (repeat) : {r['repeat']}")
-    print(f"  mean (s)              : {r['mean']:.9f}")
-    print(f"  std_dev (s)           : {r['std_dev']:.9f}")
-    print(f"  min (s)               : {r['min']:.9f}")
-    print(f"  max (s)               : {r['max']:.9f}")
+    print(f"  mean ({unit})         : {fmt(r['mean'])}")
+    print(f"  std_dev ({unit})      : {fmt(r['std_dev'])}")
+    print(f"  min ({unit})          : {fmt(r['min'])}")
+    print(f"  max ({unit})          : {fmt(r['max'])}")
+
 
 # --- helpers ---
 def _unwrap_callable(obj):
