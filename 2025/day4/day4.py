@@ -3,7 +3,7 @@ import os
 # HACK: I don't want to copy my benchmarking tools into every solution directory,
 #       so let's just modify the path at runtime and import from there.
 sys.path.insert(1, os.path.join(sys.path[0], '..', '..'))
-from bench import *
+import bench
 
 import argparse
 import copy
@@ -24,7 +24,7 @@ def part1_copy(grid):
     # top, top right, right, bottom right, bottom, bottom left, left, top left
     directions = [(-1, 0), (-1, 1), (0, 1), (1,1), (1, 0), (1,-1), (0, -1), (-1,-1)]
     for r, row in enumerate(grid):
-        for c, roll in enumerate(row):
+        for c in row:
             cell = grid[r][c]
             if cell != '@':
                 new_grid[r][c] = cell
@@ -61,7 +61,7 @@ def part2_copy(grid):
 #    print("=== AFTER ===")
 #    for row in new_grid:
 #        print("".join(row))
-    return can_take, new_grid
+#    return can_take, new_grid
 
 def part1_inplace(grid):
 #    print("=== BEFORE ===")
@@ -139,38 +139,38 @@ def main():
         print(f'Benchmarking solutions {args.part if args.part else "1 and 2"} (copy vs in-place)...\n')
         # avoid the benchmarking runs mutate grid in-place: provide a fresh copy each run.
         if args.part == 1:
-            p1_copy = bench_func(part1_copy, grid, repeat=20)
-            p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
-            print_stats(p1_copy)
+            p1_copy = bench.bench_func(part1_copy, grid, repeat=20)
+            p1_inplace = bench.bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
+            bench.print_stats(p1_copy)
             print()
-            print_stats(p1_inplace)
+            bench.print_stats(p1_inplace)
             print()
-            print_comparison(p1_copy, p1_inplace)
+            bench.print_comparison(p1_copy, p1_inplace)
         elif args.part == 2:
-            p2_copy = bench_func(part2_copy, grid, repeat=20)
-            p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
-            print_stats(p2_copy)
+            p2_copy = bench.bench_func(part2_copy, grid, repeat=20)
+            p2_inplace = bench.bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
+            bench.print_stats(p2_copy)
             print()
-            print_stats(p2_inplace)
+            bench.print_stats(p2_inplace)
             print()
-            print_comparison(p2_copy, p2_inplace)
+            bench.print_comparison(p2_copy, p2_inplace)
         else: # run everything
-            p1_copy = bench_func(part1_copy, grid, repeat=20)
-            p1_inplace = bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
-            p2_copy = bench_func(part2_copy, grid, repeat=20)
-            p2_inplace = bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
+            p1_copy = bench.bench_func(part1_copy, grid, repeat=20)
+            p1_inplace = bench.bench_func(lambda _: part1_inplace([row.copy() for row in grid]), None, repeat=20)
+            p2_copy = bench.bench_func(part2_copy, grid, repeat=20)
+            p2_inplace = bench.bench_func(lambda _: part2_inplace([row.copy() for row in grid]), None, repeat=20) 
 
-            print_stats(p1_copy)
+            bench.print_stats(p1_copy)
             print()
-            print_stats(p1_inplace)
+            bench.print_stats(p1_inplace)
             print()
-            print_comparison(p1_copy, p1_inplace)
+            bench.print_comparison(p1_copy, p1_inplace)
             print()
-            print_stats(p2_copy)
+            bench.print_stats(p2_copy)
             print()
-            print_stats(p2_inplace)
+            bench.print_stats(p2_inplace)
             print()
-            print_comparison(p2_copy, p2_inplace)
+            bench.print_comparison(p2_copy, p2_inplace)
         return
 
     if args.part == 1:
